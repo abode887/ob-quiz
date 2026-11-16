@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار معمارية الحاسوب الشامل</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            max-width: 700px;
+            width: 100%;
+            border: 1px solid #333;
+        }
+
+        h2 {
+            text-align: center;
+            color: #4da6ff;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        /* Setup Screen Styles */
+        .setup-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #4da6ff;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background-color: #2d2d2d;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+        }
+        
+        select:focus {
+            border-color: #4da6ff;
+        }
+
+        button.primary-btn {
+            background-color: #4da6ff;
+            color: #121212;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 15px;
+            transition: 0.2s;
+        }
+
+        button.primary-btn:hover {
+            background-color: #3388dd;
+        }
+
+        /* Quiz Screen Styles */
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .en-text {
+            display: block;
+            direction: ltr;
+            font-size: 0.9em;
+            color: #aaaaaa;
+            margin-top: 8px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button.option-btn {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border: 1px solid #444;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s;
+            text-align: right;
+            direction: rtl;
+        }
+
+        button.option-btn:hover:not(:disabled) {
+            background-color: #3d3d3d;
+            border-color: #4da6ff;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4da6ff;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .score-box {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #888;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        #quiz-section, #result-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Setup Section -->
+<div class="quiz-container" id="setup-section">
+    <h2>إعداد الاختبار - معمارية الحاسوب</h2>
+    
+    <div class="setup-group">
+        <label>1. اختر المحاضرة (Lecture):</label>
+        <select id="lecture-select">
+            <option value="all">جميع المحاضرات (1, 2, 3)</option>
+            <option value="1">المحاضرة الأولى (LEC 1)</option>
+            <option value="2">المحاضرة الثانية (LEC 2)</option>
+            <option value="3">المحاضرة الثالثة (LEC 3)</option>
+        </select>
+    </div>
+
+    <div class="setup-group">
+        <label>2. اختر نوع الأسئلة:</label>
+        <select id="type-select">
+            <option value="all">الكل (صح وخطأ + خيارات متعددة)</option>
+            <option value="tf">صح وخطأ فقط (True/False)</option>
+            <option value="mcq">خيارات متعددة فقط (Multiple Choice)</option>
+        </select>
+    </div>
+
+    <button class="primary-btn" onclick="startQuiz()">ابدأ الاختبار</button>
+</div>
+
+<!-- Quiz Section -->
+<div class="quiz-container" id="quiz-section">
+    <div class="score-box">
+        <span id="q-counter">السؤال 1 من 10</span>
+        <span id="q-category" style="color:#4da6ff;"></span>
+    </div>
+    
+    <div id="quiz-content">
+        <div class="question" id="question-text">جاري تحميل السؤال...</div>
+        <div class="options" id="options-container"></div>
+        <button class="primary-btn" id="next-btn" style="display:none;" onclick="nextQuestion()">السؤال التالي</button>
+    </div>
+</div>
+
+<!-- Result Section -->
+<div class="quiz-container" id="result-section">
+    <h2>نتيجة الاختبار</h2>
+    <div class="result" id="result-container" style="display:block;">
+        لقد أنهيت الاختبار!<br><br>
+        <span id="final-score" style="font-size: 1.5em; color: #fff;"></span>
+    </div>
+    <button class="primary-btn" onclick="location.reload()" style="margin-top: 30px;">العودة للقائمة الرئيسية وإعادة الاختبار</button>
+</div>
+
+<script>
+    // قاعدة البيانات الشاملة لجميع الأسئلة (108 سؤال)
+    const allQuestions = [
+        // ================= LEC 1: True / False =================
+        { lec: 1, type: "tf", ar: "تركز هندسة الكمبيوتر على الجوانب المنطقية والمجردة لنظام الكمبيوتر.", en: "Computer Architecture focuses on logical and abstract aspects of a computer system.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "بنية مجموعة التعليمات (ISA) هي الواجهة بين البرمجيات والأجهزة.", en: "ISA is the interface between software and hardware.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "تستخدم الذاكرة فقط لتخزين البرامج وليس البيانات.", en: "Memory is used only to store programs and not data.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 1, type: "tf", ar: "وقت الدورة هو مقلوب تردد الساعة.", en: "Cycle Time is the reciprocal of Clock Frequency.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "تقع ذاكرة التخزين المؤقت L2 بين المعالج والذاكرة الرئيسية.", en: "L2 Cache is situated between the processor and main memory.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "يستخدم منفذ HDMI لنقل الصوت والفيديو.", en: "HDMI is used to transmit audio and video.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "منفذ USB لا يدعم ميزة الوصل الساخن (Hot Plugging).", en: "USB does not support Hot Plugging.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 1, type: "tf", ar: "اعتمد الجيل الأول من أجهزة الكمبيوتر على الترانزستورات.", en: "The first generation of computers was based on transistors.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 1, type: "tf", ar: "يشير اختصار VLSI إلى تكامل واسع النطاق جداً (Very Large Scale Integration).", en: "VLSI stands for Very Large Scale Integration.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "توفر الحوسبة السحابية موارد مشتركة من خلال منصات حوسبة افتراضية عبر الإنترنت.", en: "Cloud Computing provides shared resources through virtual computing platforms over the Internet.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "يشير عنق زجاجة فون نيومان إلى مسار البيانات الفردي بين وحدة المعالجة المركزية والذاكرة الرئيسية.", en: "The Von Neumann Bottleneck refers to the single data path between the CPU and main memory.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "التنفيذ هو المرحلة الأولى في دورة تنفيذ فون نيومان.", en: "Execute is the first stage of the Von Neumann execution cycle.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 1, type: "tf", ar: "تنفذ وحدة الحساب والمنطق (ALU) التعليمات وتضع النتائج في المسجلات أو الذاكرة.", en: "The ALU executes instructions and places results in registers or memory.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "تقاس سرعة الناقل بالميغاهرتز (MHz) أو الغيغاهرتز (GHz).", en: "Bus speed is measured in MHz or GHz.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 1, type: "tf", ar: "ذاكرة التخزين المؤقت L1 أكبر من الذاكرة الرئيسية.", en: "L1 Cache is larger than main memory.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        
+        // ================= LEC 1: MCQ =================
+        { lec: 1, type: "mcq", ar: "أي مكون يقوم بتفسير وتنفيذ البرامج؟", en: "Which component interprets and executes programs?", options: ["الذاكرة (Memory)", "وحدة المعالجة المركزية (CPU)", "الناقل (Bus)", "منفذ (HDMI)"], answer: 1 },
+        { lec: 1, type: "mcq", ar: "أي مفهوم يتعامل مع إشارات التحكم وطرق الإشارات وأنواع الذاكرة والجوانب المادية؟", en: "Which concept deals with control signals, signaling methods, memory types, and physical aspects?", options: ["تنظيم الكمبيوتر (Computer Organization)", "الحوسبة السحابية (Cloud Computing)", "بنية مجموعة التعليمات (ISA)", "وحدة معالجة الرسومات (GPU)"], answer: 0 },
+        { lec: 1, type: "mcq", ar: "الـ ISA هو الواجهة بين:", en: "ISA is the interface between:", options: ["الذاكرة والقرص (Memory and disk)", "البرمجيات والأجهزة (Software and hardware)", "معالج الرسومات والشاشة (GPU and display)", "منافذ USB و HDMI"], answer: 1 },
+        { lec: 1, type: "mcq", ar: "يُقاس تردد الساعة بـ:", en: "Clock frequency is measured in:", options: ["البايت (Bytes)", "الهرتز (Hertz)", "المتر (Meters)", "الفولت (Volts)"], answer: 1 },
+        { lec: 1, type: "mcq", ar: "وقت الدورة هو:", en: "Cycle time is:", options: ["ضعف التردد (Twice the frequency)", "التردد زائد واحد (Frequency plus one)", "مقلوب التردد (The reciprocal of frequency)", "سعة الذاكرة (Memory capacity)"], answer: 2 },
+        { lec: 1, type: "mcq", ar: "أي ذاكرة تخزين مؤقت تكون صغيرة وسريعة ومدمجة في شريحة المعالج الدقيق؟", en: "Which cache is small, fast, and built into the microprocessor chip?", options: ["ذاكرة التخزين المؤقت L1 Cache", "الذاكرة الرئيسية (Main Memory)", "واجهة SATA", "ذاكرة DDR4"], answer: 0 },
+        { lec: 1, type: "mcq", ar: "أي واجهة تستخدم لنقل الصوت والفيديو؟", en: "Which interface is used to transmit audio and video?", options: ["منفذ HDMI", "واجهة SATA", "المنفذ التسلسلي (Serial Port)", "منفذ التوصيل PCI"], answer: 0 },
+        { lec: 1, type: "mcq", ar: "أي ناقل يدعم التوصيل والتشغيل والوصل الساخن؟", en: "Which bus supports Plug-and-Play and Hot Plugging?", options: ["الناقل التسلسلي العام (USB)", "واجهة IDE", "المنفذ المتوازي (Parallel Port)", "واجهة SATA"], answer: 0 },
+        { lec: 1, type: "mcq", ar: "اعتمد الجيل الثاني من أجهزة الكمبيوتر على:", en: "The second generation of computers was based on:", options: ["الصمامات المفرغة (Vacuum Tubes)", "الترانزستورات (Transistors)", "الدوائر المتكاملة (Integrated Circuits)", "VLSI"], answer: 1 },
+        { lec: 1, type: "mcq", ar: "ارتبط الجيل الثالث بـ:", en: "The third generation was associated with:", options: ["الآلات الحاسبة الميكانيكية", "الصمامات المفرغة", "الدوائر المتكاملة (Integrated Circuits)", "الترانزستورات"], answer: 2 },
+        { lec: 1, type: "mcq", ar: "أي منظمة تهتم بقابلية التشغيل البيني للاتصالات؟", en: "Which organization is concerned with telecommunications interoperability?", options: ["ISO", "ITU", "IEEE", "GPU"], answer: 1 },
+        { lec: 1, type: "mcq", ar: "يسمى مسار البيانات الفردي بين وحدة المعالجة المركزية والذاكرة الرئيسية بـ:", en: "The single data path between the CPU and main memory is called:", options: ["بنية مجموعة التعليمات (ISA)", "ذاكرة التخزين المؤقت (Cache)", "عنق زجاجة فون نيومان (Von Neumann Bottleneck)", "PCI"], answer: 2 },
+        { lec: 1, type: "mcq", ar: "الخطوة الأولى في دورة التعليمات هي:", en: "The first step in the instruction cycle is:", options: ["التنفيذ (Execute)", "فك التشفير (Decode)", "الجلب (Fetch)", "التخزين (Store)"], answer: 2 },
+        { lec: 1, type: "mcq", ar: "أي وحدة تنفذ التعليمات الحسابية والمنطقية؟", en: "Which unit executes arithmetic and logical instructions?", options: ["وحدة الحساب والمنطق (ALU)", "ذاكرة التخزين المؤقت (Cache)", "الناقل (Bus)", "SATA"], answer: 0 },
+        { lec: 1, type: "mcq", ar: "توفر الحوسبة السحابية موارد حوسبة مشتركة عبر:", en: "Cloud computing provides shared computing resources over:", options: ["الإنترنت (The Internet)", "لوحة المفاتيح (keyboard)", "منفذ HDMI فقط", "ذاكرة التخزين المؤقت"], answer: 0 },
+
+        // ================= LEC 2: True / False =================
+        { lec: 2, type: "tf", ar: "البايت يتكون من ثماني بتات.", en: "A byte consists of eight bits.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "الكلمة (word) تحتوي دائماً على 32 بت بالضبط.", en: "A word always contains exactly 32 bits.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "النبل (nibble) يتكون من بايتين.", en: "A nibble consists of two bytes.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "النظام العشري هو نظام أساسه 10.", en: "The decimal system is a base-10 system.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "يمكن تمثيل أي عدد صحيح بالضبط في أي أساس (radix).", en: "Any integer can be represented exactly in any radix.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "في طريقة القسمة والباقي، تُقرأ البواقي من الأعلى إلى الأسفل.", en: "In the division-remainder method, the remainders are read from top to bottom.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "باستخدام N من البتات، يكون النطاق غير المشار (unsigned) من 0 إلى (2^N) - 1.", en: "With N bits, the unsigned range is 0 to (2^N) - 1.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "يمكن لثماني بتات أن تمثل قيماً غير مشارة من 0 إلى 256.", en: "Eight bits can represent unsigned values from 0 to 256.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "كل رقم سداسي عشر يقابله مجموعة من 4 بتات.", en: "Each hexadecimal digit corresponds to a group of 4 bits.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "كل رقم ثماني يقابله مجموعة من 4 بتات.", en: "Each octal digit corresponds to a group of 4 bits.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "في نظام المقدار والإشارة، يمثل البت الأيسر (أقصى اليسار) الإشارة.", en: "In signed magnitude, the leftmost bit represents the sign.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "نظام المقدار والإشارة له تمثيلان للصفر.", en: "Signed magnitude has two representations of zero.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "نظام المتمم للأول له تمثيل واحد فقط للصفر.", en: "One's complement has a single representation of zero.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "في المتمم للأول، يتم الحصول على الرقم السالب عن طريق عكس (قلب) جميع بتات الرقم الموجب.", en: "In one's complement, a negative number is obtained by inverting all bits of the positive number.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "في جمع المتمم للأول، يتم تجاهل الحمل الناتج (carry-out).", en: "In one's complement addition, the carry-out is discarded.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "في المتمم للثاني، يتم الحصول على الرقم السالب عن طريق عكس جميع البتات وإضافة 1.", en: "In two's complement, a negative number is obtained by inverting all bits and adding 1.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "في جمع المتمم للثاني، يتم تجاهل أي حمل يخرج من البت الأعلى.", en: "In two's complement addition, any carry out of the high-order bit is discarded.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "في نظام المتمم للثاني بـ 8 بت، يتم تمثيل -3 كـ 11111101.", en: "In 8-bit two's complement, -3 is represented as 11111101.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "تتطلب الأنظمة المتممة دوائر إلكترونية خاصة لعملية الطرح.", en: "Complement systems require special circuitry for subtraction.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "يتم حساب المجموع 79 + 99 في نظام المقدار والإشارة بـ 8 بت بشكل صحيح كـ 178.", en: "The sum 79+99 in 8-bit signed magnitude is computed correctly as 178.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "تحويل 0.34375 بالأساس 10 إلى أربع خانات ثنائية هو 0.0101.", en: "0.34375 (base 10) converted to four binary places is 0.0101.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "الحساب بنظام المقدار والإشارة بسيط للأجهزة (hardware) ولكنه صعب على البشر.", en: "Signed-magnitude arithmetic is simple for hardware but difficult for humans.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 2, type: "tf", ar: "الرقم 212 (بالأساس 3) يساوي 23 في النظام العشري.", en: "212 (base 3) equals 23 in decimal.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "يمكن إضافة أصفار بادئة (على اليسار) عند تجميع البتات للتحويل إلى النظام الثماني أو السداسي عشر.", en: "Leading zeros may be added when grouping bits for octal or hexadecimal conversion.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 2, type: "tf", ar: "مجموع -23 و -9 في حساب المتمم للثاني بـ 8 بت هو 11100000 (-32).", en: "The sum of -23 and -9 in two's complement 8-bit arithmetic is 11100000 (-32).", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+
+        // ================= LEC 2: MCQ =================
+        { lec: 2, type: "mcq", ar: "مجموعة من أربع بتات تسمى:", en: "A group of four bits is called a:", options: ["بايت (byte)", "نبل (nibble)", "كلمة (word)", "أساس (radix)"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "أصغر وحدة تخزين قابلة للعنونة في نظام عنونة البايت هي:", en: "The smallest addressable unit of storage in a byte-addressable system is the:", options: ["بت (bit)", "نبل (nibble)", "بايت (byte)", "كلمة (word)"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "يسمى النظام الثنائي أيضاً بـ:", en: "The binary system is also called the:", options: ["نظام الأساس 8", "نظام الأساس 10", "نظام الأساس 16", "نظام الأساس 2 (base-2 system)"], answer: 3 },
+        { lec: 2, type: "mcq", ar: "الرقم 10110 (بالأساس 2) يعادل أي قيمة عشرية؟", en: "10110 (base 2) equals which decimal value?", options: ["20", "22", "24", "26"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "في طريقة القسمة والباقي، يتم الحصول على الرقم المحول بقراءة البواقي:", en: "In the division-remainder method, the converted number is obtained by reading the remainders:", options: ["من الأعلى إلى الأسفل (top to bottom)", "من الأسفل إلى الأعلى (bottom to top)", "من المنتصف (from the middle)", "بأي ترتيب (in any order)"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "الرقم 147 بالأساس 10 في النظام الثنائي هو:", en: "147 (base 10) in binary is:", options: ["10010011", "10011001", "11001001", "10010101"], answer: 0 },
+        { lec: 2, type: "mcq", ar: "الرقم 538 بالأساس 10 بالأساس 8 هو:", en: "538 (base 10) in base 8 is:", options: ["1023", "1302", "1032", "1320"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "نطاق الأعداد الصحيحة غير المشارة (unsigned) الممثلة بـ 8 بت هو:", en: "The range of unsigned integers represented by 8 bits is:", options: ["0 إلى 127", "0 إلى 128", "0 إلى 255", "0 إلى 256"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "الرقم 0.11 بالأساس 2 يعادل أي قيمة عشرية؟", en: "0.11 (base 2) equals which decimal value?", options: ["0.25", "0.5", "0.75", "0.875"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "الرقم الثنائي 110010011101 بالنظام السداسي عشر هو:", en: "The binary number 110010011101 in hexadecimal is:", options: ["C9D", "6235", "B9D", "C8D"], answer: 0 },
+        { lec: 2, type: "mcq", ar: "الرقم الثنائي 110010011101 بالنظام الثماني هو:", en: "The binary number 110010011101 in octal is:", options: ["6325", "6235", "5326", "3265"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "كم عدد البتات التي تشكل رقماً ثمانياً واحداً؟", en: "How many bits make up one octal digit?", options: ["2", "3", "4", "8"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "في نظام المقدار والإشارة (signed magnitude) بـ 8 بت، يُمثل الرقم -3 كـ:", en: "In 8-bit signed magnitude, -3 is represented as:", options: ["11111100", "11111101", "10000011", "00000011"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "نطاق أرقام نظام المقدار والإشارة بـ 8 بت هو:", en: "The range of 8-bit signed magnitude numbers is:", options: ["-128 to 127", "-127 to 127", "-255 to 255", "0 to 255"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "في نظام المتمم للأول (one's complement) بـ 8 بت، يُمثل الرقم -3 كـ:", en: "In 8-bit one's complement, -3 is represented as:", options: ["10000011", "11111100", "11111101", "00000011"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "في نظام المتمم للثاني (two's complement) بـ 8 بت، يُمثل الرقم -3 كـ:", en: "In 8-bit two's complement, -3 is represented as:", options: ["11111100", "10000011", "11111101", "11111110"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "أي تمثيل يتطلب \"حملاً دائرياً\" (end-around carry)؟", en: "Which representation requires an end-around carry?", options: ["المقدار والإشارة (Signed magnitude)", "المتمم للأول (One's complement)", "المتمم للثاني (Two's complement)", "الثنائي غير المشار"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "أي تمثيل له تمثيل واحد فقط للصفر؟", en: "Which representation has only ONE representation of zero?", options: ["المقدار والإشارة", "المتمم للأول", "المتمم للثاني (Two's complement)", "لا شيء منها"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "في نظام المتمم للثاني بـ 8 بت، الرقم -23 هو:", en: "In 8-bit two's complement, -23 is:", options: ["11101000", "11101001", "10010111", "11101011"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "باستخدام المتمم للثاني، 23 + (-9) يساوي:", en: "Using two's complement, 23 + (-9) equals:", options: ["32", "14", "-14", "-32"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "باستخدام المتمم للأول، 9 + (-23) يعطي 11110001، والذي يمثل:", en: "Using one's complement, 9 + (-23) gives 11110001, which is:", options: ["14", "-14", "241", "-9"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "جمع 79 + 99 في نظام المقدار والإشارة بـ 8 بت يعطي 50 بسبب:", en: "Adding 79+99 in 8-bit signed magnitude gives 50 because of:", options: ["خطأ في الإشارة (sign error)", "طفح من البت السابع (overflow from the seventh bit)", "حمل دائري", "متمم خاطئ"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "يفضل استخدام الأنظمة المتممة لأنها:", en: "Complement systems are preferred because they:", options: ["تستخدم ذاكرة أكثر", "تزيل الحاجة إلى دوائر خاصة للطرح (remove need for subtraction circuitry)", "تسمح بصفرين", "أسهل في القراءة للبشر"], answer: 1 },
+        { lec: 2, type: "mcq", ar: "تحويل 3121 (بالأساس 4) إلى النظام العشري يعطي:", en: "Converting 3121 (base 4) to decimal gives:", options: ["197", "207", "217", "227"], answer: 2 },
+        { lec: 2, type: "mcq", ar: "في جمع المتمم للثاني، الحمل الخارج من البت الأعلى يتم:", en: "In two's complement addition, a carry out of the high-order bit is:", options: ["إضافته للمجموع", "تجاهله/حذفه (discarded)", "تخزينه في بت الإشارة", "طرحه"], answer: 1 },
+
+        // ================= LEC 3: True / False =================
+        { lec: 3, type: "tf", ar: "معظم أجهزة الكمبيوتر اليوم تحتوي على أجهزة متخصصة تقوم بحسابات النقطة العائمة بدون برمجة خاصة.", en: "Most of today's computers have specialized hardware that performs floating-point arithmetic without special programming.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "في نموذج 14 بت البسيط، يستخدم حقل الإشارة بتين.", en: "In the simple 14-bit model, the sign field uses 2 bits.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 3, type: "tf", ar: "يمكن كتابة الرقم 0.125 بالترميز العلمي كـ 1.25 × 10^-1.", en: "The number 0.125 can be written in scientific notation as 1.25 x 10^-1.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "يمكن لتمثيل النقطة العائمة تخزين أرقام ذات مقادير أكبر بكثير من تمثيل النقطة الثابتة ذو الـ 14 بت.", en: "Floating-point representation can store numbers of much greater magnitude than a 14-bit fixed-point representation.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "بدون استخدام التحيز، يمكن للنموذج البسيط تمثيل الأسس السالبة بسهولة.", en: "Without a bias, the simple model can easily represent negative exponents.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 3, type: "tf", ar: "في تمثيل Excess-15، قيم الأس المخزنة الأقل من 15 تمثل أسساً سالبة.", en: "In excess-15 representation, stored exponent values less than 15 represent negative exponents.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "يُستخدم نظام BCD بشكل شائع في الأجهزة التي تعرض بيانات رقمية، مثل المنبهات والآلات الحاسبة.", en: "BCD is commonly used in devices that display numerical data, such as alarm clocks and calculators.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "يمثل BCD الرقم العشري بأكمله كقيمة ثنائية واحدة.", en: "BCD represents the whole decimal number as a single binary value.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 3, type: "tf", ar: "تم بناء كل من ASCII و EBCDIC حول الأبجدية اللاتينية.", en: "ASCII and EBCDIC were both built around the Latin alphabet.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "يمكن جعل أي قناة اتصال أو وسيط تخزين خالية تماماً من الأخطاء.", en: "Any communications channel or storage medium can be made completely error-free.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 3, type: "tf", ar: "تسمى مجموعة بتات فحص الأخطاء بـ \"المتلازمة\" (syndrome).", en: "The group of error-checking bits is called a syndrome.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+        { lec: 3, type: "tf", ar: "في فحص التكرار الدوري (CRC)، يتم تغيير بايت المعلومات الأصلي عن طريق إضافة بتات فحص الأخطاء.", en: "In a CRC, the original information byte is changed by the addition of the error-checking bits.", options: ["صح (True)", "خطأ (False)"], answer: 1 },
+        { lec: 3, type: "tf", ar: "كلما كانت كتلة البيانات المراد فحصها أكبر، كان يجب أن يكون المجموع الاختباري أكبر لتوفير حماية كافية.", en: "The larger the block of data to be checked, the larger the checksum must be to provide adequate protection.", options: ["صح (True)", "خطأ (False)"], answer: 0 },
+
+        // ================= LEC 3: MCQ =================
+        { lec: 3, type: "mcq", ar: "الأرقام المكتوبة بالترميز العلمي تتكون من أي ثلاثة مكونات؟", en: "Numbers written in scientific notation have which three components?", options: ["الإشارة، الجزء الكسري، الأس (Sign, mantissa, exponent)", "الإشارة، الأساس، التحيز", "الجزء الكسري، التحيز، المتلازمة", "الأس، الأساس، المجموع الاختباري"], answer: 0 },
+        { lec: 3, type: "mcq", ar: "في نموذج النقطة العائمة البسيط ذو الـ 14 بت، كم عدد البتات المستخدمة للجزء الكسري؟", en: "In the simple 14-bit floating-point model, how many bits are used for the significand?", options: ["5", "6", "8", "14"], answer: 2 },
+        { lec: 3, type: "mcq", ar: "في تمثيل النقطة العائمة، يحدد حجم حقل الأس:", en: "In a floating-point representation, the size of the exponent field determines:", options: ["دقة الرقم", "نطاق القيم التي يمكن تمثيلها (The range of values)", "إشارة الرقم", "عدد بتات فحص الأخطاء"], answer: 1 },
+        { lec: 3, type: "mcq", ar: "في تمثيل النقطة العائمة، يحدد حجم الجزء الكسري:", en: "In a floating-point representation, the size of the significand determines:", options: ["نطاق القيم", "قيمة التحيز", "دقة التمثيل (The precision of the representation)", "إشارة القيمة المخزنة"], answer: 2 },
+        { lec: 3, type: "mcq", ar: "الرقم العشري 17 المكتوب بصيغة ثنائية قياسية هو:", en: "The decimal number 17 written in normalized binary form is:", options: ["0.10001 × 2^4", "0.10001 × 2^5", "0.1001 × 2^5", "1.0001 × 2^5"], answer: 1 },
+        { lec: 3, type: "mcq", ar: "ما هو التحيز المستخدم مع أس من 5 بت في النموذج البسيط (Excess-15)؟", en: "What is the bias used with a 5-bit exponent in the simple model?", options: ["5", "8", "15", "31"], answer: 2 },
+        { lec: 3, type: "mcq", ar: "ما هو الأس المتحيز المخزن للرقم 17 (الأس الحقيقي = 5)؟", en: "What is the biased exponent stored for the number 17 (true exp = 5)?", options: ["5", "10", "15", "20"], answer: 3 },
+        { lec: 3, type: "mcq", ar: "لتخزين 0.25 (الأس = -1) باستخدام تحيز Excess-15، يحتوي حقل الأس على:", en: "To store 0.25 using excess-15, the exponent field contains:", options: ["14", "15", "16", "1"], answer: 0 },
+        { lec: 3, type: "mcq", ar: "لماذا يستخدم الأس المتحيز في النموذج البسيط؟", en: "Why is a biased exponent used in the simple model?", options: ["لزيادة حجم الجزء الكسري", "للسماح بتمثيل الأسس السالبة (allow negative exponents)", "لاكتشاف الأخطاء في الأس", "لتحويل الأرقام إلى BCD"], answer: 1 },
+        { lec: 3, type: "mcq", ar: "ما هو العيب الرئيسي لوجود تمثيلات متعددة لنفس الرقم؟", en: "What is the main drawback of multiple representations of the same number?", options: ["تجعل الأرقام أكبر", "تهدر المساحة وتسبب ارتباكاً (waste space and cause confusion)", "تسبب طفحاً", "تزيل بت الإشارة"], answer: 1 },
+        { lec: 3, type: "mcq", ar: "في نظام BCD، يتم تشفير كل رقم عشري باستخدام:", en: "In BCD, each decimal digit is encoded using:", options: ["2 بت", "3 بت", "4 بت", "8 بت"], answer: 2 },
+        { lec: 3, type: "mcq", ar: "كود ASCII هو سليل مباشر لأنظمة التشفير التي استخدمتها:", en: "ASCII is a direct descendant of coding schemes used by:", options: ["الأقراص المغناطيسية", "أجهزة المبرقة الكاتبة Teletype", "الآلات الحاسبة للجيب", "أنظمة Unicode"], answer: 1 },
+        { lec: 3, type: "mcq", ar: "وُصِف Unicode في هذه المحاضرة بأنه:", en: "Unicode is described in this lecture as a:", options: ["كود 7-بت", "كود 8-بت", "كود 16-بت", "كود 32-بت"], answer: 2 },
+        { lec: 3, type: "mcq", ar: "في نظام اكتشاف الأخطاء المنهجي مثل CRC، يتم:", en: "In a systematic error detection scheme, the error-checking bits are:", options: ["إدراجها عشوائياً داخل البيانات", "إلحاقها بالمعلومات الأصلية (Appended to original)", "تخزينها في قرص منفصل", "استبدال البيانات الأصلية بها"], answer: 1 },
+        { lec: 3, type: "mcq", ar: "في الحساب بنظام Modulo 2، نتيجة 1 + 1 هي:", en: "In modulo 2 arithmetic, the result of 1+1 is:", options: ["2", "10", "1", "0"], answer: 3 }
+    ];
+
+    let filteredQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function startQuiz() {
+        const lecFilter = document.getElementById('lecture-select').value;
+        const typeFilter = document.getElementById('type-select').value;
+
+        // فلترة الأسئلة حسب اختيار المستخدم
+        filteredQuestions = allQuestions.filter(q => {
+            const matchLec = (lecFilter === "all") || (q.lec == lecFilter);
+            const matchType = (typeFilter === "all") || (q.type === typeFilter);
+            return matchLec && matchType;
+        });
+
+        if (filteredQuestions.length === 0) {
+            alert("عذراً، لا توجد أسئلة بهذا التصنيف!");
+            return;
+        }
+
+        // إخفاء الإعدادات وإظهار الاختبار
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('quiz-section').style.display = 'block';
+
+        currentQuestionIndex = 0;
+        score = 0;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = filteredQuestions[currentQuestionIndex];
+        
+        // تحديث العداد والتصنيف
+        document.getElementById('q-counter').innerText = `السؤال ${currentQuestionIndex + 1} من ${filteredQuestions.length}`;
+        document.getElementById('q-category').innerText = `المحاضرة ${q.lec} - ${q.type === 'tf' ? 'صح/خطأ' : 'خيارات'}`;
+        
+        // عرض السؤال
+        document.getElementById('question-text').innerHTML = `${q.ar} <span class="en-text">${q.en}</span>`;
+        
+        // عرض الخيارات
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        // إخفاء زر التالي حتى يتم اختيار إجابة
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        const q = filteredQuestions[currentQuestionIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        // إيقاف الأزرار لمنع النقر المتعدد
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === q.answer) {
+            btnElement.style.backgroundColor = '#2e7d32'; // لون أخضر للإجابة الصحيحة
+            btnElement.style.borderColor = '#4caf50';
+            score++;
+        } else {
+            btnElement.style.backgroundColor = '#c62828'; // لون أحمر للإجابة الخاطئة
+            btnElement.style.borderColor = '#e53935';
+            buttons[q.answer].style.backgroundColor = '#2e7d32'; // إظهار الصحيح
+        }
+
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < filteredQuestions.length) {
+            loadQuestion();
+        } else {
+            // إنهاء الاختبار وعرض النتيجة
+            document.getElementById('quiz-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+            document.getElementById('final-score').innerText = `نتيجتك النهائية: ${score} من ${filteredQuestions.length}`;
+        }
+    }
+</script>
+
+</body>
+</html>
